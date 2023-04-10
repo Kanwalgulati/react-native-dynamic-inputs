@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableHighlight,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -15,6 +14,7 @@ interface TypeTextInput {
   text: string;
   id: number;
   isRequired: boolean;
+  type?: string;
 }
 const getUniqueId = () => {
   let id = 0;
@@ -29,47 +29,63 @@ const dummyData: TypeTextInput = {
   isRequired: false,
 };
 
-function App(): JSX.Element {
-  const [textInput, setTextInput] = useState<TypeTextInput[]>([{...dummyData}]);
-  const [text, setText] = useState(1);
-  useEffect(() => {
-    console.log(text);
+const data: TypeTextInput[] = [
+  {id: 1, text: '', isRequired: false, type: 'numeric'},
+  {id: 2, text: '', isRequired: false, type: 'email-address'},
+  {id: 3, text: '', isRequired: false, type: 'phone-pad'},
+  {id: 4, text: '', isRequired: false, type: 'url'},
+  {id: 5, text: '', isRequired: false, type: 'numeric'},
+];
 
-    setText(text + 1);
-  }, []);
+function App(): JSX.Element {
+  // const [textInput, setTextInput] = useState<TypeTextInput[]>([{...dummyData}]);
+  const [textInput, setTextInput] = useState<TypeTextInput[]>([...data]);
+
   const addNewTextBox = () => {
+    if (data.length) return;
     let tempTextInputs = [...textInput, {...dummyData, id: generate_uuid()}];
     setTextInput(tempTextInputs);
   };
-  const deleteTextBox = (id: number) => () => {
-    let tempTextInput = textInput.filter(inputBox => inputBox.id !== id);
-    setTextInput(tempTextInput);
-  };
-  const handleChangeText = (targetId: number) => (txt: string) => {
-    let tempTextInput: TypeTextInput[] = [];
-    textInput.forEach(({id, text, isRequired}) => {
-      if (targetId === id) {
-        tempTextInput.push({id, text: txt, isRequired});
-      } else {
-        tempTextInput.push({id, text, isRequired});
-      }
-    });
-    setTextInput(tempTextInput);
-  };
-  const onDone = () => {
+  const deleteTextBox = useCallback(
+    (id: number) => () => {
+      let tempTextInput = textInput.filter(inputBox => inputBox.id !== id);
+      setTextInput(tempTextInput);
+    },
+    [textInput],
+  );
+  const handleChangeText = useCallback(
+    (targetId: number) => (txt: string) => {
+      let tempTextInput: TypeTextInput[] = [];
+
+      textInput.forEach(({id, text, isRequired, type}) => {
+        if (targetId === id) {
+          tempTextInput.push({id, text: txt, isRequired, type});
+        } else {
+          tempTextInput.push({id, text, isRequired, type});
+        }
+      });
+      setTextInput(tempTextInput);
+    },
+    [textInput],
+  );
+
+  const onDone = useCallback(() => {
     let tempTextInput: TypeTextInput[] = [];
     let allGood = true;
-    tempTextInput = textInput.map(({id, text}) => {
+    tempTextInput = textInput.map(({id, text, type}) => {
       if (!text) allGood = false;
-      return {id, text, isRequired: !text ? true : false};
+      return {id, text, isRequired: !text ? true : false, type: type};
     });
     setTextInput(tempTextInput);
     if (!allGood) {
       return;
     }
-  };
+  }, [textInput]);
 
-  const renderItem = ({id, text, isRequired}: TypeTextInput, index: number) => {
+  const renderItem = (
+    {id, text, isRequired, type}: TypeTextInput,
+    index: number,
+  ) => {
     return (
       <View key={id} style={{flex: 1}}>
         <View style={{flex: 1}}>
@@ -79,6 +95,7 @@ function App(): JSX.Element {
               placeholder="Enter Value"
               value={text}
               style={styles.inputStyle}
+              keyboardType={type ? type : 'default'}
               onChangeText={handleChangeText(id)}
             />
             {index !== 0 ? (
@@ -111,7 +128,9 @@ function App(): JSX.Element {
             <Text>Add+</Text>
           </Pressable>
         </View>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentOffset={{x: 100, y: 323}}>
           {textInput.map(renderItem)}
         </ScrollView>
         <TouchableOpacity onPress={onDone} style={styles.doneStyle}>
@@ -141,7 +160,7 @@ const styles = StyleSheet.create({
     borderRadius: 29,
     backgroundColor: 'yellow',
     width: '100%',
-    height: 80,
+    height: 50,
   },
   textBoxContainer: {
     flexDirection: 'row',
