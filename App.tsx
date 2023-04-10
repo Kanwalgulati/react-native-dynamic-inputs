@@ -1,5 +1,6 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
+  KeyboardTypeOptions,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -14,7 +15,7 @@ interface TypeTextInput {
   text: string;
   id: number;
   isRequired: boolean;
-  type?: string;
+  type?: KeyboardTypeOptions;
 }
 const getUniqueId = () => {
   let id = 0;
